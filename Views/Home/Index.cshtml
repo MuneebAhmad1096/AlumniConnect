@@ -1,0 +1,74 @@
+﻿@model IEnumerable<AlumniConnect.Models.Project>
+@{
+    ViewData["Title"] = "Home";
+    string currentDomain = ViewBag.CurrentDomain ?? "All";
+}
+
+<div class="p-5 mb-4 bg-primary text-white rounded-3 shadow-sm">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">AlumniConnect</h1>
+        <p class="col-md-8 fs-5">Explore approved Final Year Projects, theses, and research archives from the Department of Software Engineering.</p>
+        
+        <form asp-controller="Home" asp-action="Index" method="get" class="row g-2 mt-3">
+            <div class="col-md-7">
+                <input type="text" name="search" value="@ViewBag.CurrentSearch" class="form-control form-control-lg" placeholder="Search by project title, student name, or supervisor..." />
+                <input type="hidden" name="domain" value="@currentDomain" />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-light btn-lg w-100 fw-semibold text-primary">Search Archive</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Domain Filter Buttons -->
+<div class="mb-4 d-flex flex-wrap gap-2">
+    @foreach (var d in new[] { "All", "Web", "Machine Learning", "Cyber Security", "Systems" })
+    {
+        var activeClass = currentDomain == d ? "btn-primary" : "btn-outline-primary";
+        <a asp-controller="Home" asp-action="Index" asp-route-domain="@d" asp-route-search="@ViewBag.CurrentSearch" class="btn @activeClass">
+            @d
+        </a>
+    }
+</div>
+
+<!-- Dynamic Project Cards -->
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No approved projects found matching your filter yet. Submit a project in the <strong>Student Portal</strong> and approve it via the <strong>Faculty Portal</strong>!
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary">@item.Domain</span>
+                            <small class="text-muted">Batch @item.BatchYear</small>
+                        </div>
+                        <h5 class="card-title fw-bold">@item.Title</h5>
+                        <p class="card-text text-muted small">@item.Description</p>
+                        <hr />
+                        <p class="mb-1 small"><strong>Author:</strong> @item.AuthorName (@item.RollNumber)</p>
+                        <p class="mb-0 small"><strong>Supervisor:</strong> @item.SupervisorName</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 d-flex gap-2 pb-3">
+                        @if (!string.IsNullOrEmpty(item.PdfFilePath))
+                        {
+                            <a href="@item.PdfFilePath" target="_blank" class="btn btn-sm btn-outline-danger">View Thesis PDF</a>
+                        }
+                        @if (!string.IsNullOrEmpty(item.GitHubUrl))
+                        {
+                            <a href="@item.GitHubUrl" target="_blank" class="btn btn-sm btn-outline-dark">GitHub Repo</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

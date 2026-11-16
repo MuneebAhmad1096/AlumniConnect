@@ -1,0 +1,121 @@
+﻿@model IEnumerable<AlumniConnect.Models.Project>
+@{
+    ViewData["Title"] = "Student Portal";
+}
+
+<h2 class="fw-bold mb-4">Student Portal — Capstone Submission</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Left Column: Submission Form -->
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-semibold">
+                Submit New Final Year Project
+            </div>
+            <div class="card-body">
+                <form asp-controller="Student" asp-action="SubmitProject" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Project Title</label>
+                        <input name="Title" class="form-control" required placeholder="e.g., AI-Based Traffic Monitoring" />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Domain</label>
+                            <select name="Domain" class="form-select">
+                                <option value="Web">Web</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="Cyber Security">Cyber Security</option>
+                                <option value="Systems">Systems</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Batch Year</label>
+                            <input name="BatchYear" class="form-control" value="2024" required />
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Author Name</label>
+                            <input name="AuthorName" class="form-control" required placeholder="Muneeb Ahmad" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Roll Number</label>
+                            <input name="RollNumber" class="form-control" required placeholder="BSEF24M012" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Supervisor Name</label>
+                        <input name="SupervisorName" class="form-control" required placeholder="Dr. Asif" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Abstract / Description</label>
+                        <textarea name="Description" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">GitHub Repository URL (Optional)</label>
+                        <input name="GitHubUrl" type="url" class="form-control" placeholder="https://github.com/..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Thesis PDF Document</label>
+                        <input name="pdfFile" type="file" accept=".pdf" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">Submit Project</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Submitted Projects Status Table -->
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white fw-semibold">
+                Submitted Projects & Approval Status
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Domain</th>
+                            <th>Supervisor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No projects submitted yet.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                var badgeClass = item.Status == "Approved" ? "bg-success" :
+                                                 item.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark";
+                                <tr>
+                                    <td>
+                                        <strong>@item.Title</strong><br />
+                                        <small class="text-muted">@item.AuthorName (@item.RollNumber)</small>
+                                    </td>
+                                    <td>@item.Domain</td>
+                                    <td>@item.SupervisorName</td>
+                                    <td><span class="badge @badgeClass">@item.Status</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

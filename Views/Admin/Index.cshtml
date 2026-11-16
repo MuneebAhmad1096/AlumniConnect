@@ -1,0 +1,105 @@
+﻿@model IEnumerable<AlumniConnect.Models.Project>
+@{
+    ViewData["Title"] = "Admin Portal";
+}
+
+<h2 class="fw-bold mb-4">Admin Portal — System Overview & Archive Management</h2>
+
+@if (TempData["AdminMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @TempData["AdminMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Live Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-uppercase small">Total Projects</h6>
+                <h2 class="fw-bold mb-0">@ViewBag.TotalProjects</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-uppercase small">Approved Archive</h6>
+                <h2 class="fw-bold mb-0">@ViewBag.ApprovedCount</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-dark bg-warning shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-uppercase small">Pending Review</h6>
+                <h2 class="fw-bold mb-0">@ViewBag.PendingCount</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-dark shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-uppercase small">Registered Users</h6>
+                <h2 class="fw-bold mb-0">@ViewBag.TotalUsers</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Master Archive Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white fw-semibold">
+        All Repository Records
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Domain</th>
+                        <th>Author (Roll No)</th>
+                        <th>Supervisor</th>
+                        <th>Status</th>
+                        <th class="text-end">Manage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No projects in the database.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            var badgeClass = item.Status == "Approved" ? "bg-success" :
+                                             item.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark";
+                            <tr>
+                                <td>#@item.Id</td>
+                                <td><strong>@item.Title</strong></td>
+                                <td>@item.Domain</td>
+                                <td>@item.AuthorName (@item.RollNumber)</td>
+                                <td>@item.SupervisorName</td>
+                                <td><span class="badge @badgeClass">@item.Status</span></td>
+                                <td class="text-end">
+                                    <form asp-controller="Admin" asp-action="DeleteProject" method="post"
+                                          onsubmit="return confirm('Delete this project permanently?');">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

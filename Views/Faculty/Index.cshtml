@@ -1,0 +1,93 @@
+﻿@model IEnumerable<AlumniConnect.Models.Project>
+@{
+    ViewData["Title"] = "Faculty Portal";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Faculty Portal — Project Review Queue</h2>
+        <p class="text-muted mb-0">Review, verify, and approve student capstone submissions for the public archive.</p>
+    </div>
+    <span class="badge bg-warning text-dark fs-6">
+        Pending: @Model.Count(p => p.Status == "Pending")
+    </span>
+</div>
+
+@if (TempData["StatusMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["StatusMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Project Details</th>
+                        <th>Student & Batch</th>
+                        <th>Supervisor</th>
+                        <th>Resources</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No projects submitted yet.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            var badgeClass = item.Status == "Approved" ? "bg-success" :
+                                             item.Status == "Rejected" ? "bg-danger" : "bg-warning text-dark";
+                            <tr>
+                                <td style="max-width: 280px;">
+                                    <span class="badge bg-primary mb-1">@item.Domain</span><br />
+                                    <strong>@item.Title</strong>
+                                    <p class="text-muted small mb-0 text-truncate">@item.Description</p>
+                                </td>
+                                <td>
+                                    @item.AuthorName<br />
+                                    <small class="text-muted">@item.RollNumber • Batch @item.BatchYear</small>
+                                </td>
+                                <td>@item.SupervisorName</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.PdfFilePath))
+                                    {
+                                        <a href="@item.PdfFilePath" target="_blank" class="btn btn-sm btn-outline-danger mb-1">PDF</a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.GitHubUrl))
+                                    {
+                                        <a href="@item.GitHubUrl" target="_blank" class="btn btn-sm btn-outline-dark mb-1">GitHub</a>
+                                    }
+                                </td>
+                                <td><span class="badge @badgeClass">@item.Status</span></td>
+                                <td class="text-end">
+                                    <form asp-controller="Faculty" asp-action="UpdateStatus" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" name="status" value="Approved" class="btn btn-sm btn-success"
+                                                disabled="@(item.Status == "Approved")">
+                                            Approve
+                                        </button>
+                                        <button type="submit" name="status" value="Rejected" class="btn btn-sm btn-outline-danger"
+                                                disabled="@(item.Status == "Rejected")">
+                                            Reject
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
