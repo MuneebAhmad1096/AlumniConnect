@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using AlumniConnect.Data;
+using AlumniConnect.Repositories;
 
 namespace AlumniConnect
 {
@@ -21,6 +22,10 @@ namespace AlumniConnect
                 .AddEntityFrameworkStores<AlumniConnectContext>();
 
             builder.Services.AddControllersWithViews();
+            builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+            builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IFileRepository, FileRepository>();
 
             var app = builder.Build();
 
@@ -39,7 +44,7 @@ namespace AlumniConnect
                     }
                 }
 
-                async Task SeedUser(string email, string password, string role)
+                async Task SeedUser(string email, string password, string role, string fullName, string? rollNumber = null)
                 {
                     if (await userManager.FindByEmailAsync(email) == null)
                     {
@@ -47,7 +52,10 @@ namespace AlumniConnect
                         {
                             UserName = email,
                             Email = email,
-                            EmailConfirmed = true
+                            EmailConfirmed = true,
+                            FullName = fullName,
+                            RollNumber = rollNumber,
+                            Department = "Software Engineering"
                         };
                         var result = await userManager.CreateAsync(user, password);
                         if (result.Succeeded)
@@ -57,9 +65,9 @@ namespace AlumniConnect
                     }
                 }
 
-                await SeedUser("admin@alumniconnect.edu.pk", "Admin@123", "Admin");
-                await SeedUser("faculty@alumniconnect.edu.pk", "Faculty@123", "Faculty");
-                await SeedUser("student@alumniconnect.edu.pk", "Student@123", "Student");
+                await SeedUser("admin@alumniconnect.edu.pk", "Admin@123", "Admin", "System Administrator");
+                await SeedUser("faculty@alumniconnect.edu.pk", "Faculty@123", "Faculty", "Dr. Shuja ur Rehman");
+                await SeedUser("student@alumniconnect.edu.pk", "Student@123", "Student", "Muneeb Ahmad", "BSEF24M012");
             }
 
             if (!app.Environment.IsDevelopment())

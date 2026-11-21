@@ -1,43 +1,33 @@
-﻿using AlumniConnect.Data;
+﻿using AlumniConnect.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AlumniConnect.Controllers
 {
     [Authorize(Roles = "Faculty,Admin")]
     public class FacultyController : Controller
     {
-        private readonly AlumniConnectContext _context;
+        private readonly IProjectRepository _projectRepo;
 
-        public FacultyController(AlumniConnectContext context)
+        public FacultyController(IProjectRepository projectRepo)
         {
-            _context = context;
+            _projectRepo = projectRepo;
         }
 
         public async Task<IActionResult> Index()
         {
-            var projects = await _context.Projects
-                .OrderBy(p => p.Status == "Pending" ? 0 : 1)
-                .ThenByDescending(p => p.SubmittedDate)
-                .ToListAsync();
-
+            var projects = await _projectRepo.GetAllProjectsAsync();
             return View(projects);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int id, string status)
         {
-            var project = await _context.Projects.FindAsync(id);
-            if (project != null && (status == "Approved" || status == "Rejected"))
-            {
-                project.Status = status;
-                await _context.SaveChangesAsync();
-                TempData["StatusMessage"] = $"Project '{project.Title}' has been marked as {status}.";
-            }
+            if (status != "Approved" && status != "Rejected")
+                return Json(new { success = false, message = "Invalid status." });
 
-            return RedirectToAction(nameof(Index));
+            bool updated = await _projectRepo.UpdateStatusAsync(id, status);
+            return Json(new { success = updated, newStatus = status });
         }
     }
 }

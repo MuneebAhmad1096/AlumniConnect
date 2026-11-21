@@ -54,6 +54,17 @@ public class RegisterModel : PageModel
     public class InputModel
     {
         [Required]
+        [Display(Name = "Full Name")]
+        public string FullName { get; set; } = default!;
+
+        [Display(Name = "Roll Number (Students)")]
+        public string? RollNumber { get; set; }
+
+        [Required]
+        [Display(Name = "Department")]
+        public string Department { get; set; } = "Software Engineering";
+
+        [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = default!;
@@ -83,6 +94,9 @@ public class RegisterModel : PageModel
         if (ModelState.IsValid)
         {
             var user = CreateUser();
+            user.FullName = Input.FullName;
+            user.RollNumber = Input.RollNumber;
+            user.Department = Input.Department;
 
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -121,7 +135,6 @@ public class RegisterModel : PageModel
             }
         }
 
-        // If we got this far, something failed, redisplay form
         return Page();
     }
 

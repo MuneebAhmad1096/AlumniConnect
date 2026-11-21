@@ -1,60 +1,57 @@
-﻿using AlumniConnect.Data;
-using AlumniConnect.Models;
+﻿using AlumniConnect.Models;
+using AlumniConnect.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AlumniConnect.Controllers
 {
     [Authorize(Roles = "Student,Admin")]
     public class StudentController : Controller
     {
-        private readonly AlumniConnectContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IProjectRepository _projectRepo;
+        private readonly IUserRepository _userRepo;
+        private readonly IFileRepository _fileRepo;
 
-        public StudentController(AlumniConnectContext context, IWebHostEnvironment env)
+        public StudentController(
+            IProjectRepository projectRepo,
+            IUserRepository userRepo,
+            IFileRepository fileRepo)
         {
-            _context = context;
-            _env = env;
+            _projectRepo = projectRepo;
+            _userRepo = userRepo;
+            _fileRepo = fileRepo;
         }
 
         public async Task<IActionResult> Index()
         {
-            var projects = await _context.Projects
-                .OrderByDescending(p => p.SubmittedDate)
-                .ToListAsync();
+            var email = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(email))
+            {
+                var currentUser = await _userRepo.GetUserByEmailAsync(email);
+                ViewBag.StudentName = currentUser?.FullName;
+                ViewBag.StudentRoll = currentUser?.RollNumber;
+            }
 
+            var projects = await _projectRepo.GetAllProjectsAsync();
             return View(projects);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitProject(Project project, IFormFile? pdfFile)
+        public async Task<IActionResult> Create(Project project, IFormFile? pdfFile)
         {
-            if (pdfFile != null && pdfFile.Length > 0)
+            if (ModelState.IsValid)
             {
-                string uploadsFolder = Path.Combine(_env.WebRootPath, "docs");
-                Directory.CreateDirectory(uploadsFolder);
+                project.PdfFilePath = await _fileRepo.SavePdfAsync(pdfFile);
+                project.Status = "Pending";
+                project.SubmittedDate = DateTime.Now;
 
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(pdfFile.FileName);
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await pdfFile.CopyToAsync(stream);
-                }
-
-                project.PdfFilePath = "/docs/" + uniqueFileName;
+                await _projectRepo.AddAsync(project);
+                return RedirectToAction(nameof(Index));
             }
 
-            project.Status = "Pending";
-            project.SubmittedDate = DateTime.Now;
-
-            _context.Projects.Add(project);
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = "Project submitted successfully and is awaiting Faculty approval!";
-            return RedirectToAction(nameof(Index));
+            var projects = await _projectRepo.GetAllProjectsAsync();
+            return View("Index", projects);
         }
     }
 }
