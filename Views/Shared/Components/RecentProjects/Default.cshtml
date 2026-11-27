@@ -1,0 +1,29 @@
+﻿@model IEnumerable<AlumniConnect.Models.Project>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Latest Approved Projects</h5>
+        <span class="badge bg-primary">@Model.Count() Shown</span>
+    </div>
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p class="text-muted mb-0">No approved projects available yet.</p>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var project in Model)
+                {
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-1 fw-bold">@project.Title</h6>
+                            <span class="badge bg-secondary">@project.Domain</span>
+                        </div>
+                        <small class="text-muted">By @project.AuthorName | Supervisor: @project.SupervisorName</small>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

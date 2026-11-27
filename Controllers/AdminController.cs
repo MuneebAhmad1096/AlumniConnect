@@ -1,6 +1,9 @@
-﻿using AlumniConnect.Repositories;
+﻿using AlumniConnect.Hubs;
+using AlumniConnect.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AlumniConnect.Controllers
 {
@@ -11,17 +14,23 @@ namespace AlumniConnect.Controllers
         private readonly IDashboardRepository _dashboardRepo;
         private readonly IUserRepository _userRepo;
         private readonly IFileRepository _fileRepo;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IMemoryCache _cache;
 
         public AdminController(
             IProjectRepository projectRepo,
             IDashboardRepository dashboardRepo,
             IUserRepository userRepo,
-            IFileRepository fileRepo)
+            IFileRepository fileRepo,
+            IHubContext<NotificationHub> hubContext,
+            IMemoryCache cache)
         {
             _projectRepo = projectRepo;
             _dashboardRepo = dashboardRepo;
             _userRepo = userRepo;
             _fileRepo = fileRepo;
+            _hubContext = hubContext;
+            _cache = cache;
         }
 
         public async Task<IActionResult> Index()
@@ -42,6 +51,12 @@ namespace AlumniConnect.Controllers
             _fileRepo.DeletePdf(project.PdfFilePath);
             bool deleted = await _projectRepo.DeleteAsync(id);
             var updatedStats = await _dashboardRepo.GetSystemStatsAsync();
+
+            if (deleted)
+            {
+                _cache.Remove("ApprovedProjects_All_");
+                await _hubContext.Clients.All.SendAsync("ReceiveProjectAlert", $"{project.Title} (Removed)", project.Domain);
+            }
 
             return Json(new
             {

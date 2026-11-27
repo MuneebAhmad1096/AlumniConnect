@@ -22,6 +22,16 @@ namespace AlumniConnect
                 .AddEntityFrameworkStores<AlumniConnectContext>();
 
             builder.Services.AddControllersWithViews();
+            builder.Services.AddMemoryCache();
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -80,6 +90,8 @@ namespace AlumniConnect
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
 
             app.UseAuthentication();
             app.UseAuthorization();

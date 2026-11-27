@@ -49,6 +49,10 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            <div id="liveAlertBanner" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+                <strong>New Approved Capstone!</strong> <span id="liveAlertText"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             @RenderBody()
         </main>
     </div>
@@ -61,6 +65,22 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveProjectAlert", function (title, domain) {
+            const banner = document.getElementById("liveAlertBanner");
+            const text = document.getElementById("liveAlertText");
+            text.textContent = `"${title}" (${domain}) was just approved!`;
+            banner.classList.remove("d-none");
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

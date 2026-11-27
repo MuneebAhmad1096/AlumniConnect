@@ -32,6 +32,8 @@
     <partial name="_ProjectCardsPartial" model="Model" />
 </div>
 
+@await Component.InvokeAsync("RecentProjects", new { count = 3 })
+
 @section Scripts {
     <script>
         $(document).ready(function () {
